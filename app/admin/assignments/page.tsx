@@ -30,7 +30,7 @@ export default function AssignmentsPage() {
     loadData()
   }, [])
 
-  async function loadData() {
+  const loadData = async () => {
     try {
       setError('')
       console.log('🔄 Cargando datos de asignaciones...')
@@ -78,7 +78,7 @@ export default function AssignmentsPage() {
     }
   }
 
-  async function loadAgentsFromAPI() {
+  const loadAgentsFromAPI = async () => {
     try {
       setAgentsLoading(true)
       console.log('🔄 Cargando agentes desde API de Bravilo...')
@@ -107,7 +107,7 @@ export default function AssignmentsPage() {
     }
   }
 
-  async function createAssignment() {
+  const createAssignment = async () => {
     if (!selectedUser || !selectedAgent) {
       setError('Por favor selecciona un usuario y un agente')
       return
@@ -289,7 +289,7 @@ export default function AssignmentsPage() {
     }
   }
 
-  async function deleteAssignment(userId: string, agentId: string) {
+  const deleteAssignment = async (userId: string, agentId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta asignación?')) return
 
     try {
