@@ -10,8 +10,10 @@ import { useEffect, useState } from 'react'
 import { supabase, Profile } from '@/lib/supabase'
 import { braviloApiClient, Agent as BraviloAgent } from '@/lib/bravilo-api'
 import { formatDate } from '@/lib/utils'
+import { useAuth } from '@/lib/auth-context'
 
 export default function AssignmentsPage() {
+  const { user, profile } = useAuth()
   const [users, setUsers] = useState<Profile[]>([])
   const [agents, setAgents] = useState<BraviloAgent[]>([])
   const [assignments, setAssignments] = useState<any[]>([])
