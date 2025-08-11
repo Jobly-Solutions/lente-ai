@@ -116,7 +116,20 @@ export default function AssignmentsPage() {
     try {
       setError('')
       setSuccessMessage('')
-      console.log('🔄 Creando asignación:', { selectedUser, selectedAgent })
+      
+      // Verificar estado de autenticación
+      console.log('🔐 Estado de autenticación:', {
+        user: !!user,
+        profile: !!profile,
+        profileRole: profile?.role,
+        timestamp: new Date().toISOString()
+      })
+      
+      console.log('🔄 Iniciando creación de asignación:', { 
+        selectedUser, 
+        selectedAgent,
+        timestamp: new Date().toISOString()
+      })
 
       // Verificar que el agente existe en la API
       const selectedAgentData = agents.find(a => a.id === selectedAgent)
@@ -141,6 +154,12 @@ export default function AssignmentsPage() {
 
       if (!foundAgent) {
         // Crear agente en base de datos local
+        console.log('🔄 Creando agente local:', {
+          agent_id: selectedAgent,
+          name: selectedAgentData.name,
+          description: selectedAgentData.description
+        })
+
         const { data: newAgent, error: createError } = await supabase
           .from('agents')
           .insert({
@@ -154,24 +173,79 @@ export default function AssignmentsPage() {
           .single()
 
         if (createError) {
-          throw createError
+          console.error('❌ Error creando agente local:', createError)
+          throw new Error(`Error al crear agente local: ${createError.message}`)
+        }
+
+        if (!newAgent || !newAgent.id) {
+          throw new Error('Agente creado pero no se obtuvo ID válido')
         }
 
         localAgentId = newAgent.id
-        console.log('✅ Agente creado en base de datos local')
+        console.log('✅ Agente creado en base de datos local con ID:', localAgentId)
       }
 
-      // Crear la asignación
-      const { error: assignmentError } = await supabase
-        .from('assignments')
-        .insert({
+      // Verificar que tenemos un ID válido para el agente
+      if (!localAgentId) {
+        throw new Error('No se pudo obtener el ID del agente local')
+      }
+
+      console.log('🔍 Creando asignación con:', { 
+        user_id: selectedUser, 
+        agent_id: localAgentId,
+        agent_name: selectedAgentData.name 
+      })
+
+      // Verificar que el usuario esté autenticado
+      if (!user || !profile) {
+        throw new Error('Usuario no autenticado o perfil no cargado')
+      }
+      
+      if (profile.role !== 'admin') {
+        throw new Error('Usuario no tiene permisos de administrador')
+      }
+      
+      // Crear la asignación usando la API route (que maneja RLS)
+      console.log('🌐 Creando asignación vía API route...')
+      console.log('📤 Datos enviados:', { user_id: selectedUser, agent_id: localAgentId })
+      
+      const response = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           user_id: selectedUser,
           agent_id: localAgentId
         })
+      })
 
-      if (assignmentError) {
-        console.error('❌ Error creando asignación:', assignmentError)
-        throw assignmentError
+      console.log('📥 Respuesta de la API:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      })
+
+      if (!response.ok) {
+        let errorData
+        try {
+          errorData = await response.json()
+          console.log('❌ Error data de la API:', errorData)
+        } catch (parseError) {
+          console.log('❌ Error parseando respuesta de error:', parseError)
+          errorData = { error: `Error HTTP ${response.status}: ${response.statusText}` }
+        }
+        throw new Error(errorData.error || `Error HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      let result
+      try {
+        result = await response.json()
+        console.log('✅ Asignación creada vía API:', result)
+      } catch (parseError) {
+        console.log('⚠️ Error parseando respuesta exitosa:', parseError)
+        result = { success: true, message: 'Asignación creada pero respuesta no parseable' }
       }
 
       console.log('✅ Asignación creada exitosamente')
@@ -182,8 +256,32 @@ export default function AssignmentsPage() {
       setSelectedAgent('')
       setSuccessMessage('Asignación creada exitosamente')
     } catch (error: any) {
-      console.error('❌ Error creando asignación:', error)
-      setError(error.message || 'Error al crear la asignación')
+      console.error('❌ Error creando asignación:', {
+        error: error,
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+        errorType: error.constructor.name,
+        errorKeys: Object.keys(error)
+      })
+      
+      // Mensaje de error más descriptivo
+      let errorMessage = 'Error al crear la asignación'
+      
+      if (error.message && error.message !== '{}') {
+        errorMessage = error.message
+      } else if (error.details) {
+        errorMessage = `Error de base de datos: ${error.details}`
+      } else if (error.hint) {
+        errorMessage = `Error: ${error.hint}`
+      } else if (error.name) {
+        errorMessage = `Error: ${error.name}`
+      } else {
+        errorMessage = `Error desconocido: ${JSON.stringify(error)}`
+      }
+      
+      console.log('📝 Mensaje de error final:', errorMessage)
+      setError(errorMessage)
     }
   }
 
@@ -195,16 +293,27 @@ export default function AssignmentsPage() {
       setSuccessMessage('')
       console.log('🔄 Eliminando asignación:', { userId, agentId })
 
-      const { error } = await supabase
-        .from('assignments')
-        .delete()
-        .eq('user_id', userId)
-        .eq('agent_id', agentId)
+      // Eliminar asignación usando la API route
+      console.log('🌐 Eliminando asignación vía API route...')
+      
+      const response = await fetch('/api/assignments', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          agent_id: agentId
+        })
+      })
 
-      if (error) {
-        console.error('❌ Error eliminando asignación:', error)
-        throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al eliminar asignación')
       }
+
+      const result = await response.json()
+      console.log('✅ Asignación eliminada vía API:', result)
 
       console.log('✅ Asignación eliminada exitosamente')
       

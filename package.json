@@ -6,12 +6,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3001",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop lente-ai",
+    "pm2:restart": "pm2 restart lente-ai",
+    "pm2:delete": "pm2 delete lente-ai",
+    "pm2:logs": "pm2 logs lente-ai",
+    "pm2:monit": "pm2 monit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.54.0",
     "@types/bcryptjs": "^2.4.6",
