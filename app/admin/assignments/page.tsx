@@ -205,48 +205,52 @@ export default function AssignmentsPage() {
         throw new Error('Usuario no tiene permisos de administrador')
       }
       
-      // Crear la asignación usando la API route (que maneja RLS)
-      console.log('🌐 Creando asignación vía API route...')
-      console.log('📤 Datos enviados:', { user_id: selectedUser, agent_id: localAgentId })
+      // Validar que los IDs sean válidos
+      if (!selectedUser || !localAgentId) {
+        throw new Error('Usuario o agente no seleccionado correctamente')
+      }
       
-      const response = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Verificar que el usuario y agente existan
+      const userExists = users.find(u => u.id === selectedUser)
+      const agentExists = agents.find(a => a.id === localAgentId)
+      
+      if (!userExists) {
+        throw new Error('Usuario seleccionado no encontrado')
+      }
+      
+      if (!agentExists) {
+        throw new Error('Agente seleccionado no encontrado')
+      }
+      
+      console.log('✅ Validaciones pasadas:', {
+        user: userExists.full_name,
+        agent: agentExists.name
+      })
+      
+      // Crear la asignación directamente usando el cliente de Supabase
+      console.log('🔗 Creando asignación directamente...')
+      console.log('📤 Datos a insertar:', { 
+        user_id: selectedUser, 
+        agent_id: localAgentId,
+        assigned_at: new Date().toISOString()
+      })
+      
+      const { data: newAssignment, error: assignmentError } = await supabase
+        .from('assignments')
+        .insert({
           user_id: selectedUser,
-          agent_id: localAgentId
+          agent_id: localAgentId,
+          assigned_at: new Date().toISOString()
         })
-      })
+        .select()
+        .single()
 
-      console.log('📥 Respuesta de la API:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      })
-
-      if (!response.ok) {
-        let errorData
-        try {
-          errorData = await response.json()
-          console.log('❌ Error data de la API:', errorData)
-        } catch (parseError) {
-          console.log('❌ Error parseando respuesta de error:', parseError)
-          errorData = { error: `Error HTTP ${response.status}: ${response.statusText}` }
-        }
-        throw new Error(errorData.error || `Error HTTP ${response.status}: ${response.statusText}`)
+      if (assignmentError) {
+        console.error('❌ Error creando asignación:', assignmentError)
+        throw new Error(`Error al crear asignación: ${assignmentError.message}`)
       }
 
-      let result
-      try {
-        result = await response.json()
-        console.log('✅ Asignación creada vía API:', result)
-      } catch (parseError) {
-        console.log('⚠️ Error parseando respuesta exitosa:', parseError)
-        result = { success: true, message: 'Asignación creada pero respuesta no parseable' }
-      }
+      console.log('✅ Asignación creada exitosamente:', newAssignment)
 
       console.log('✅ Asignación creada exitosamente')
       
@@ -293,27 +297,21 @@ export default function AssignmentsPage() {
       setSuccessMessage('')
       console.log('🔄 Eliminando asignación:', { userId, agentId })
 
-      // Eliminar asignación usando la API route
-      console.log('🌐 Eliminando asignación vía API route...')
+      // Eliminar asignación directamente usando Supabase
+      console.log('🗑️ Eliminando asignación directamente...')
       
-      const response = await fetch('/api/assignments', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          agent_id: agentId
-        })
-      })
+      const { error: deleteError } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('user_id', userId)
+        .eq('agent_id', agentId)
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Error al eliminar asignación')
+      if (deleteError) {
+        console.error('❌ Error eliminando asignación:', deleteError)
+        throw new Error(`Error al eliminar asignación: ${deleteError.message}`)
       }
 
-      const result = await response.json()
-      console.log('✅ Asignación eliminada vía API:', result)
+      console.log('✅ Asignación eliminada exitosamente')
 
       console.log('✅ Asignación eliminada exitosamente')
       
