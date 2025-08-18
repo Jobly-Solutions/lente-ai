@@ -132,6 +132,15 @@ export default function AssignmentsPage() {
         selectedAgent,
         timestamp: new Date().toISOString()
       })
+      
+      console.log('🔍 Datos disponibles:', {
+        usersCount: users.length,
+        agentsCount: agents.length,
+        selectedUser,
+        selectedAgent,
+        users: users.map(u => ({ id: u.id, name: u.full_name })),
+        agents: agents.map(a => ({ id: a.id, name: a.name }))
+      })
 
       // Verificar que el agente existe en la API
       const selectedAgentData = agents.find(a => a.id === selectedAgent)
@@ -139,63 +148,10 @@ export default function AssignmentsPage() {
         throw new Error('Agente no encontrado en la API')
       }
 
-      // Crear el agente en la base de datos local si no existe
-      const { data: existingAgents, error: checkError } = await supabase
-        .from('agents')
-        .select('*')
-        .eq('agent_id', selectedAgent)
-        .order('created_at', { ascending: false })
-        .limit(1)
-
-      if (checkError && !checkError.message.includes('No rows found')) {
-        throw checkError
-      }
-
-      const foundAgent = Array.isArray(existingAgents) ? existingAgents[0] : undefined
-      let localAgentId = foundAgent?.id
-
-      if (!foundAgent) {
-        // Crear agente en base de datos local
-        console.log('🔄 Creando agente local:', {
-          agent_id: selectedAgent,
-          name: selectedAgentData.name,
-          description: selectedAgentData.description
-        })
-
-        const { data: newAgent, error: createError } = await supabase
-          .from('agents')
-          .insert({
-            agent_id: selectedAgent,
-            name: selectedAgentData.name,
-            description: selectedAgentData.description,
-            is_active: true,
-            is_shared: false
-          })
-          .select()
-          .single()
-
-        if (createError) {
-          console.error('❌ Error creando agente local:', createError)
-          throw new Error(`Error al crear agente local: ${createError.message}`)
-        }
-
-        if (!newAgent || !newAgent.id) {
-          throw new Error('Agente creado pero no se obtuvo ID válido')
-        }
-
-        localAgentId = newAgent.id
-        console.log('✅ Agente creado en base de datos local con ID:', localAgentId)
-      }
-
-      // Verificar que tenemos un ID válido para el agente
-      if (!localAgentId) {
-        throw new Error('No se pudo obtener el ID del agente local')
-      }
-
-      console.log('🔍 Creando asignación con:', { 
-        user_id: selectedUser, 
-        agent_id: localAgentId,
-        agent_name: selectedAgentData.name 
+      console.log('🤖 Agente seleccionado:', {
+        id: selectedAgentData.id,
+        name: selectedAgentData.name,
+        description: selectedAgentData.description
       })
 
       // Verificar que el usuario esté autenticado
@@ -208,32 +164,64 @@ export default function AssignmentsPage() {
       }
       
       // Validar que los IDs sean válidos
-      if (!selectedUser || !localAgentId) {
+      if (!selectedUser || !selectedAgentData.id) {
         throw new Error('Usuario o agente no seleccionado correctamente')
       }
       
-      // Verificar que el usuario y agente existan
+      // Verificar que el usuario exista
       const userExists = users.find(u => u.id === selectedUser)
-      const agentExists = agents.find(a => a.id === localAgentId)
-      
       if (!userExists) {
         throw new Error('Usuario seleccionado no encontrado')
       }
       
-      if (!agentExists) {
-        throw new Error('Agente seleccionado no encontrado')
+      console.log('✅ Usuario validado:', userExists.full_name)
+      
+      // Verificar si el agente existe en la base de datos local
+      console.log('🔍 Verificando si el agente existe en la base local...')
+      let { data: localAgent, error: checkError } = await supabase
+        .from('agents')
+        .select('*')
+        .eq('agent_id', selectedAgentData.id)
+        .single()
+
+      // Si el agente no existe en la base local, crearlo
+      if (checkError || !localAgent) {
+        console.log('🔄 Agente no encontrado en base local, creándolo...')
+        const { data: newAgent, error: createAgentError } = await supabase
+          .from('agents')
+          .insert({
+            agent_id: selectedAgentData.id,
+            name: selectedAgentData.name,
+            description: selectedAgentData.description || '',
+            is_active: true,
+            is_shared: false,
+            user_id: selectedUser // Asignar al usuario que está creando la asignación
+          })
+          .select()
+          .single()
+
+        if (createAgentError) {
+          console.error('❌ Error creando agente local:', createAgentError)
+          throw new Error(`Error al crear agente local: ${createAgentError.message}`)
+        }
+        
+        localAgent = newAgent
+        console.log('✅ Agente creado en base local:', localAgent.id)
+      } else {
+        console.log('✅ Agente encontrado en base local:', localAgent.id)
       }
       
       console.log('✅ Validaciones pasadas:', {
         user: userExists.full_name,
-        agent: agentExists.name
+        agent: selectedAgentData.name,
+        local_agent_id: localAgent.id
       })
       
-      // Crear la asignación directamente usando el cliente de Supabase
-      console.log('🔗 Creando asignación directamente...')
+      // Crear la asignación usando el UUID local del agente
+      console.log('🔗 Creando asignación...')
       console.log('📤 Datos a insertar:', { 
         user_id: selectedUser, 
-        agent_id: localAgentId,
+        agent_id: localAgent.id, // Usar el UUID local
         assigned_at: new Date().toISOString()
       })
       
@@ -241,7 +229,7 @@ export default function AssignmentsPage() {
         .from('assignments')
         .insert({
           user_id: selectedUser,
-          agent_id: localAgentId,
+          agent_id: localAgent.id, // Usar el UUID local
           assigned_at: new Date().toISOString()
         })
         .select()

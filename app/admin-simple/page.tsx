@@ -220,12 +220,16 @@ export default function AdminSimplePage() {
             name: agentData.name,
             description: agentData.description,
             is_active: true,
-            is_shared: false
+            is_shared: false,
+            user_id: selectedUser // Agregar el user_id del usuario seleccionado
           })
           .select()
           .single()
 
-        if (createError) throw createError
+        if (createError) {
+          console.error('Error al crear agente local:', createError)
+          throw new Error(`Error al crear agente local: ${createError.message}`)
+        }
         localAgent = newAgent
       }
 
