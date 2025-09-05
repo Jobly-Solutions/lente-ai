@@ -28,6 +28,10 @@ function ChatContent() {
   const { user } = useAuth()
 
   useEffect(() => {
+    console.log('Chat component - User state:', { user, hasUser: !!user, userId: user?.id })
+  }, [user])
+
+  useEffect(() => {
     if (user?.id) {
       loadAgents(user.id)
     } else {
@@ -148,6 +152,19 @@ function ChatContent() {
     try {
       setSessionId(agentId) // use agentId as temporary conversation key
       setMessages([])
+      
+      // Try to load existing conversation history
+      const hasHistory = await loadHistory(agentId)
+      if (!hasHistory) {
+        // If no history, start with a welcome message
+        const welcomeMessage: ChatMessage = {
+          id: Date.now().toString(),
+          content: `Hola! Soy ${selectedAgent?.name || 'tu asistente'}. ¿En qué puedo ayudarte?`,
+          role: 'assistant',
+          timestamp: new Date().toISOString(),
+        }
+        setMessages([welcomeMessage])
+      }
     } catch (error) {
       console.error('Error creating chat session:', error)
     }
@@ -157,22 +174,63 @@ function ChatContent() {
     try {
       const u = await supabase.auth.getUser()
       const userId = u.data.user?.id
-      if (!userId) return false
+      
+      // Try to load history for authenticated user first
+      if (userId) {
+        console.log('Loading history for authenticated user:', { userId, agentId })
+        
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('conversation_id, messages')
+          .eq('user_id', userId)
+          .eq('agent_id', agentId)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          
+        if (error) {
+          console.error('Error loading history:', error)
+        } else if (data && data[0]) {
+          const row = data[0]
+          const msgs = Array.isArray(row.messages) ? row.messages : []
+          console.log('Loaded messages for authenticated user:', msgs.length)
+          
+          setSessionId(row.conversation_id || agentId)
+          setMessages(msgs)
+          return msgs.length > 0
+        }
+      }
+      
+      // Fallback: try to load any conversation for this agent (for anonymous users)
+      console.log('Trying to load any conversation for agent:', agentId)
+      
       const { data, error } = await supabase
         .from('conversations')
         .select('conversation_id, messages')
-        .eq('user_id', userId)
         .eq('agent_id', agentId)
         .order('updated_at', { ascending: false })
         .limit(1)
-      if (error) return false
+        
+      if (error) {
+        console.error('Error loading fallback history:', error)
+        return false
+      }
+      
+      console.log('Fallback history data:', data)
+      
       const row = data && data[0]
-      if (!row) return false
+      if (!row) {
+        console.log('No conversation found for agent')
+        return false
+      }
+      
       const msgs = Array.isArray(row.messages) ? row.messages : []
+      console.log('Loaded fallback messages:', msgs.length)
+      
       setSessionId(row.conversation_id || agentId)
       setMessages(msgs)
       return msgs.length > 0
-    } catch {
+    } catch (error) {
+      console.error('Error in loadHistory:', error)
       return false
     }
   }
@@ -191,6 +249,34 @@ function ChatContent() {
     setInputMessage('')
     setLoading(true)
 
+    // Always save user message first
+    const u = await supabase.auth.getUser()
+    const userId = u.data.user?.id
+    const convId = sessionId || selectedAgent.id
+    setSessionId(convId)
+    
+    console.log('User authentication check:', { 
+      user: u.data.user, 
+      userId, 
+      hasUser: !!u.data.user,
+      error: u.error 
+    })
+
+    // Save user message (with or without authentication)
+    const saveUserId = userId || 'anonymous-' + Date.now()
+    try {
+      console.log('Saving user message:', { userId: saveUserId, agentId: selectedAgent.id, conversationId: convId, role: 'user', content: userMessage.content })
+      const response = await fetch('/api/chat/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: saveUserId, agentId: selectedAgent.id, conversationId: convId, role: 'user', content: userMessage.content }),
+      })
+      const result = await response.json()
+      console.log('User message save result:', result)
+    } catch (error) {
+      console.error('Error saving user message:', error)
+    }
+
     try {
       const result = await braviloApiClient.sendMessage(selectedAgent.id, inputMessage, sessionId || undefined)
       const assistantMessage: ChatMessage = {
@@ -200,23 +286,19 @@ function ChatContent() {
         timestamp: new Date().toISOString(),
       }
       setMessages(prev => [...prev, assistantMessage])
-      const convId = result.conversationId || sessionId || selectedAgent.id
-      setSessionId(convId)
 
-      // Persist both messages
-      const u = await supabase.auth.getUser()
-      const userId = u.data.user?.id
-      if (userId) {
-        await fetch('/api/chat/save', {
+      // Save assistant message
+      try {
+        console.log('Saving assistant message:', { userId: saveUserId, agentId: selectedAgent.id, conversationId: convId, role: 'assistant', content: assistantMessage.content })
+        const response = await fetch('/api/chat/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, agentId: selectedAgent.id, conversationId: convId, role: 'user', content: userMessage.content }),
+          body: JSON.stringify({ userId: saveUserId, agentId: selectedAgent.id, conversationId: convId, role: 'assistant', content: assistantMessage.content }),
         })
-        await fetch('/api/chat/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, agentId: selectedAgent.id, conversationId: convId, role: 'assistant', content: assistantMessage.content }),
-        })
+        const result = await response.json()
+        console.log('Assistant message save result:', result)
+      } catch (error) {
+        console.error('Error saving assistant message:', error)
       }
     } catch (error) {
       console.error('Error sending message:', error)
@@ -227,6 +309,17 @@ function ChatContent() {
         timestamp: new Date().toISOString()
       }
       setMessages(prev => [...prev, errorMessage])
+
+      // Save error message
+      try {
+        await fetch('/api/chat/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: saveUserId, agentId: selectedAgent.id, conversationId: convId, role: 'assistant', content: errorMessage.content }),
+        })
+      } catch (error) {
+        console.error('Error saving error message:', error)
+      }
     } finally {
       setLoading(false)
     }
