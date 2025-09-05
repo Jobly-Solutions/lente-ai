@@ -83,8 +83,7 @@ function createApiInstance() {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
     },
-    // Disable axios cache, always revalidate
-    adapter: 'xhr',
+    timeout: 10000, // 10 second timeout
   });
 }
 
@@ -100,6 +99,11 @@ export interface Agent {
   hidden?: boolean;
   visibility?: 'public' | 'private';
   organizationId?: string;
+  // Prompt configuration
+  systemPrompt?: string;
+  userPrompt?: string;
+  modelName?: 'gpt_3_5_turbo' | 'gpt_3_5_turbo_16k' | 'gpt_4' | 'gpt_4_32k' | 'gpt_4o_mini';
+  temperature?: number;
 }
 
 export interface Datastore {
@@ -192,6 +196,13 @@ export const braviloApiClient = {
     } catch (error) {
       console.error('❌ Error obteniendo agentes de API:', error);
       console.warn('⚠️ Usando agentes de prueba como fallback');
+      
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      
       return FALLBACK_AGENTS;
     }
   },
@@ -221,7 +232,15 @@ export const braviloApiClient = {
     }
   },
 
-  async createAgent(data: { name: string; description?: string }): Promise<Agent> {
+  async createAgent(data: { 
+    name: string; 
+    description?: string; 
+    systemPrompt?: string; 
+    userPrompt?: string; 
+    modelName?: 'gpt_3_5_turbo' | 'gpt_3_5_turbo_16k' | 'gpt_4' | 'gpt_4_32k' | 'gpt_4o_mini'; 
+    temperature?: number; 
+    visibility?: 'public' | 'private' 
+  }): Promise<Agent> {
     const apiKey = getApiKey();
     
     if (!apiKey) {
@@ -241,7 +260,7 @@ export const braviloApiClient = {
     }
 
     const braviloApi = createApiInstance();
-    const response = await braviloApi.put(`/agents/${id}`, data);
+    const response = await braviloApi.patch(`/agents/${id}`, data);
     return response.data;
   },
 
@@ -371,7 +390,7 @@ export const braviloApiClient = {
     }
     const payload = {
       datastoreId,
-      type: 'web_page',
+      type: 'página_web',
       name,
       config: { source_url: sourceUrl },
       ...(customId ? { custom_id: customId } : {}),
@@ -391,7 +410,7 @@ export const braviloApiClient = {
     }
     const payload: any = {
       datastoreId,
-      type: 'web_site',
+      type: 'sitio_web',
       name,
       config: {},
     };
@@ -415,6 +434,31 @@ export const braviloApiClient = {
     } catch (error) {
       console.error('❌ Error getting datasource:', error);
       return null;
+    }
+  },
+
+  // New: Datasource - List by datastore
+  // Note: Bravilo API doesn't have a direct endpoint to list datasources by datastore
+  // We'll use the datastore query endpoint to get information about sources
+  async getDatasourcesByDatastore(datastoreId: string): Promise<Datasource[]> {
+    const apiKey = getApiKey();
+    if (!apiKey) return [];
+    try {
+      // Try to get all datasources first (if this endpoint exists)
+      const braviloApi = createApiInstance();
+      const response = await braviloApi.get(`/datasources`);
+      
+      // Filter by datastoreId if the response is an array
+      if (Array.isArray(response.data)) {
+        return response.data.filter((ds: any) => ds.datastoreId === datastoreId || ds.groupId === datastoreId);
+      }
+      
+      // If not an array, return empty array
+      return [];
+    } catch (error) {
+      console.error('❌ Error getting datasources by datastore:', error);
+      // Return empty array as fallback
+      return [];
     }
   },
 

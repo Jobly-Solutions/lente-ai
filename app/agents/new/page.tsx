@@ -17,7 +17,12 @@ export default function NewAgentPage() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    description: ''
+    description: '',
+    systemPrompt: '',
+    userPrompt: '{query}', // Valor fijo
+    modelName: 'gpt_4o_mini' as 'gpt_4o_mini', // Valor fijo
+    temperature: 0, // Valor fijo
+    visibility: 'public' as 'public' | 'private'
   })
   const [datastores, setDatastores] = useState<{ id: string; name: string }[]>([])
   const [selectedDatastoreIds, setSelectedDatastoreIds] = useState<string[]>([])
@@ -59,11 +64,11 @@ export default function NewAgentPage() {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'number' ? parseFloat(value) || 0 : value
     }))
   }
 
@@ -131,13 +136,58 @@ export default function NewAgentPage() {
                 </p>
               </div>
 
+              {/* Hidden fields for fixed values */}
+              <input type="hidden" name="modelName" value={formData.modelName} />
+              <input type="hidden" name="temperature" value={formData.temperature} />
+              <input type="hidden" name="userPrompt" value={formData.userPrompt} />
+
+              {/* Prompt Configuration */}
+              <div>
+                <label htmlFor="systemPrompt" className="block text-sm font-medium text-gray-700 mb-2">
+                  Prompt del Sistema
+                </label>
+                <textarea
+                  id="systemPrompt"
+                  name="systemPrompt"
+                  value={formData.systemPrompt}
+                  onChange={handleInputChange}
+                  placeholder="Eres un asistente de IA especializado en... Define el rol y comportamiento del agente aquí."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-lente-500 focus:border-lente-500"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Define el rol, personalidad y comportamiento del agente. Este prompt se ejecuta en cada conversación.
+                </p>
+              </div>
+
+
+              <div>
+                <label htmlFor="visibility" className="block text-sm font-medium text-gray-700 mb-2">
+                  Visibilidad
+                </label>
+                <select
+                  id="visibility"
+                  name="visibility"
+                  value={formData.visibility}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-lente-500 focus:border-lente-500"
+                >
+                  <option value="public">Público</option>
+                  <option value="private">Privado</option>
+                </select>
+                <p className="text-sm text-gray-500 mt-1">
+                  Los agentes públicos pueden ser usados por todos los usuarios, los privados solo por administradores.
+                </p>
+              </div>
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-blue-900 mb-2">Información Importante</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• El agente se creará con la configuración básica</li>
-                  <li>• Podrás personalizar su comportamiento después de la creación</li>
-                  <li>• El agente estará inactivo por defecto hasta que lo actives</li>
-                  <li>• Puedes conectarlo a datastores ahora o más tarde</li>
+                  <li>• El agente se creará con GPT-4o Mini y temperatura 0 (máxima precisión)</li>
+                  <li>• El prompt del sistema define el rol y comportamiento del agente</li>
+                  <li>• El prompt de usuario se configura automáticamente con {`{query}`}</li>
+                  <li>• Puedes conectarlo a datastores para acceso a información específica</li>
+                  <li>• El agente responderá de manera consistente y precisa</li>
                 </ul>
               </div>
 

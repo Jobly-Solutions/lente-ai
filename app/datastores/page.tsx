@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Database, Plus, Search, Edit, Trash2, FileText, FileSpreadsheet, FileCode } from 'lucide-react'
+import { Database, Plus, Search, Trash2, FileText, FileSpreadsheet, FileCode } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { braviloApiClient, Datastore } from '@/lib/bravilo-api'
@@ -147,11 +147,6 @@ export default function DatastoresPage() {
                       <CardTitle className="text-lg">{datastore.name}</CardTitle>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Link href={`/datastores/${datastore.id}/edit`}>
-                        <Button variant="ghost" size="sm" className="p-1">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </Link>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -189,11 +184,16 @@ export default function DatastoresPage() {
                         Ver Detalles
                       </Button>
                     </Link>
-                    <Link href={`/datastores/${datastore.id}/upload`} className="flex-1">
+                    <a 
+                      href={`https://app.braviloai.com/datastores/${datastore.id}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-1"
+                    >
                       <Button variant="ghost" size="sm" className="w-full">
                         Subir Datos
                       </Button>
-                    </Link>
+                    </a>
                   </div>
                 </CardContent>
               </Card>

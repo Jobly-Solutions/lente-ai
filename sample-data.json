@@ -1,0 +1,148 @@
+[
+  {
+    "id": "lente_company_overview",
+    "content": "Lente AI es una empresa líder en consultoría de inteligencia artificial que ayuda a organizaciones a transformar sus operaciones mediante soluciones de IA personalizadas. Fundada con la misión de democratizar el acceso a la inteligencia artificial, Lente AI combina experiencia técnica profunda con un enfoque centrado en el negocio para entregar resultados medibles.",
+    "metadata": {
+      "source": "company_overview",
+      "category": "Empresa",
+      "company": "Lente AI",
+      "type": "descripción_general"
+    }
+  },
+  {
+    "id": "lente_services_consulting",
+    "content": "Servicios de Consultoría en IA: Evaluación de madurez en IA, estrategia de implementación, roadmap de transformación digital, análisis de viabilidad de proyectos de IA, y optimización de procesos existentes con inteligencia artificial.",
+    "metadata": {
+      "source": "services_consulting",
+      "category": "Servicios",
+      "company": "Lente AI",
+      "type": "consultoría"
+    }
+  },
+  {
+    "id": "lente_services_development",
+    "content": "Desarrollo de Soluciones de IA: Chatbots y asistentes virtuales, sistemas de procesamiento de lenguaje natural, algoritmos de machine learning personalizados, automatización de procesos con RPA, y dashboards de análisis predictivo.",
+    "metadata": {
+      "source": "services_development",
+      "category": "Servicios",
+      "company": "Lente AI",
+      "type": "desarrollo"
+    }
+  },
+  {
+    "id": "lente_services_data",
+    "content": "Análisis de Datos y Business Intelligence: Limpieza y preparación de datos, análisis exploratorio de datos, creación de modelos predictivos, visualización de datos interactiva, y reporting automatizado con KPIs personalizados.",
+    "metadata": {
+      "source": "services_data",
+      "category": "Servicios",
+      "company": "Lente AI",
+      "type": "análisis_datos"
+    }
+  },
+  {
+    "id": "lente_industries_healthcare",
+    "content": "Sector Salud: Diagnóstico asistido por IA, análisis de imágenes médicas, optimización de recursos hospitalarios, predicción de riesgos de salud, y automatización de procesos administrativos en clínicas y hospitales.",
+    "metadata": {
+      "source": "industries_healthcare",
+      "category": "Industrias",
+      "company": "Lente AI",
+      "type": "salud"
+    }
+  },
+  {
+    "id": "lente_industries_finance",
+    "content": "Sector Financiero: Detección de fraude, scoring crediticio, análisis de riesgo, automatización de procesos de compliance, chatbots para atención al cliente, y trading algorítmico.",
+    "metadata": {
+      "source": "industries_finance",
+      "category": "Industrias",
+      "company": "Lente AI",
+      "type": "finanzas"
+    }
+  },
+  {
+    "id": "lente_industries_retail",
+    "content": "Sector Retail: Recomendaciones personalizadas, optimización de inventario, análisis de comportamiento del cliente, predicción de demanda, y automatización de atención al cliente.",
+    "metadata": {
+      "source": "industries_retail",
+      "category": "Industrias",
+      "company": "Lente AI",
+      "type": "retail"
+    }
+  },
+  {
+    "id": "lente_contact_info",
+    "content": "Información de Contacto: Email: info@lenteai.com, Teléfono: +1-555-0123, Sitio web: www.lenteai.com, LinkedIn: linkedin.com/company/lente-ai, Twitter: @lente_ai",
+    "metadata": {
+      "source": "contact_info",
+      "category": "Contacto",
+      "company": "Lente AI",
+      "type": "información_contacto"
+    }
+  },
+  {
+    "id": "lente_team_expertise",
+    "content": "Nuestro equipo cuenta con más de 10 años de experiencia en inteligencia artificial, machine learning, y transformación digital. Incluye científicos de datos, ingenieros de ML, consultores de negocio, y especialistas en implementación de soluciones de IA.",
+    "metadata": {
+      "source": "team_expertise",
+      "category": "Equipo",
+      "company": "Lente AI",
+      "type": "expertise"
+    }
+  },
+  {
+    "id": "lente_case_study_1",
+    "content": "Caso de Éxito - Hospital Regional: Implementamos un sistema de análisis de imágenes médicas que redujo el tiempo de diagnóstico en un 60% y mejoró la precisión en un 25%. El sistema procesa más de 1000 imágenes diarias y ha ayudado a detectar condiciones críticas de manera temprana.",
+    "metadata": {
+      "source": "case_study_hospital",
+      "category": "Casos de Éxito",
+      "company": "Lente AI",
+      "type": "salud"
+    }
+  },
+  {
+    "id": "lente_case_study_2",
+    "content": "Caso de Éxito - Banco Nacional: Desarrollamos un sistema de detección de fraude que redujo las pérdidas en un 40% y mejoró la experiencia del cliente al reducir falsos positivos en un 70%. El sistema procesa más de 1 millón de transacciones diarias.",
+    "metadata": {
+      "source": "case_study_bank",
+      "category": "Casos de Éxito",
+      "company": "Lente AI",
+      "type": "finanzas"
+    }
+  },
+  {
+    "id": "ai_trends_2024",
+    "content": "Tendencias de IA en 2024: Generative AI mainstream, IA multimodal, edge computing con IA, democratización de herramientas de IA, ética y gobernanza de IA, y automatización inteligente en todos los sectores.",
+    "metadata": {
+      "source": "ai_trends",
+      "category": "Tendencias",
+      "type": "tendencias_2024"
+    }
+  },
+  {
+    "id": "ml_basics",
+    "content": "Machine Learning Básico: El machine learning es una rama de la inteligencia artificial que permite a las computadoras aprender patrones en los datos sin ser programadas explícitamente. Incluye aprendizaje supervisado, no supervisado, y por refuerzo.",
+    "metadata": {
+      "source": "ml_basics",
+      "category": "Educación",
+      "type": "conceptos_básicos"
+    }
+  },
+  {
+    "id": "nlp_overview",
+    "content": "Procesamiento de Lenguaje Natural (NLP): El NLP permite a las computadoras entender, interpretar y generar lenguaje humano. Aplicaciones incluyen chatbots, análisis de sentimientos, traducción automática, y resumen de textos.",
+    "metadata": {
+      "source": "nlp_overview",
+      "category": "Educación",
+      "type": "nlp"
+    }
+  },
+  {
+    "id": "data_science_process",
+    "content": "Proceso de Data Science: 1) Definición del problema, 2) Recopilación de datos, 3) Limpieza y preparación, 4) Exploración y análisis, 5) Modelado, 6) Evaluación, 7) Implementación, 8) Monitoreo y mantenimiento.",
+    "metadata": {
+      "source": "data_science_process",
+      "category": "Educación",
+      "type": "proceso"
+    }
+  }
+]

@@ -39,24 +39,42 @@ export default function NewDatastorePage() {
 
       // Optional immediate datasource creation
       if (uploadType === 'file' && file) {
-        await braviloApiClient.createDatasourceFile({
-          datastoreId: (datastore as any).id,
-          file,
-          fileName: file.name,
-        })
+        try {
+          await braviloApiClient.createDatasourceFile({
+            datastoreId: datastore.id,
+            file,
+            fileName: file.name,
+          })
+          console.log('✅ Datasource de archivo creado exitosamente')
+        } catch (error) {
+          console.error('❌ Error creando datasource de archivo:', error)
+          alert('Error al subir el archivo. El datastore se creó pero no se pudo subir el archivo.')
+        }
       } else if (uploadType === 'web_page' && urlValue.trim()) {
-        await braviloApiClient.createDatasourceWebPage({
-          datastoreId: (datastore as any).id,
-          name: urlName || 'Página web',
-          sourceUrl: urlValue.trim(),
-        })
+        try {
+          await braviloApiClient.createDatasourceWebPage({
+            datastoreId: datastore.id,
+            name: urlName || 'Página web',
+            sourceUrl: urlValue.trim(),
+          })
+          console.log('✅ Datasource de página web creado exitosamente')
+        } catch (error) {
+          console.error('❌ Error creando datasource de página web:', error)
+          alert('Error al crear la fuente de página web. El datastore se creó pero no se pudo agregar la página.')
+        }
       } else if (uploadType === 'web_site' && (sitemapUrl.trim() || urlValue.trim())) {
-        await braviloApiClient.createDatasourceWebSite({
-          datastoreId: (datastore as any).id,
-          name: urlName || 'Sitio web',
-          sitemap: sitemapUrl.trim() || undefined,
-          sourceUrl: urlValue.trim() || undefined,
-        })
+        try {
+          await braviloApiClient.createDatasourceWebSite({
+            datastoreId: datastore.id,
+            name: urlName || 'Sitio web',
+            sitemap: sitemapUrl.trim() || undefined,
+            sourceUrl: urlValue.trim() || undefined,
+          })
+          console.log('✅ Datasource de sitio web creado exitosamente')
+        } catch (error) {
+          console.error('❌ Error creando datasource de sitio web:', error)
+          alert('Error al crear la fuente de sitio web. El datastore se creó pero no se pudo agregar el sitio.')
+        }
       }
 
       router.push('/datastores')
