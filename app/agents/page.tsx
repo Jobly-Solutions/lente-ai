@@ -209,9 +209,9 @@ export default function AgentsPage() {
                         Probar Chat
                       </Button>
                     </Link>
-                    <Link href={`/agents/${agent.id}`} className="flex-1">
+                    <Link href={`/agents/${agent.id}/edit`} className="flex-1">
                       <Button variant="ghost" size="sm" className="w-full">
-                        Ver Detalles
+                        Editar
                       </Button>
                     </Link>
                   </div>

@@ -102,7 +102,7 @@ export interface Agent {
   // Prompt configuration
   systemPrompt?: string;
   userPrompt?: string;
-  modelName?: 'gpt_3_5_turbo' | 'gpt_3_5_turbo_16k' | 'gpt_4' | 'gpt_4_32k' | 'gpt_4o_mini';
+  modelName?: 'gpt_3_5_turbo' | 'gpt_3_5_turbo_16k' | 'gpt_4' | 'gpt_4_32k' | 'gpt_4o';
   temperature?: number;
 }
 
@@ -237,7 +237,7 @@ export const braviloApiClient = {
     description?: string; 
     systemPrompt?: string; 
     userPrompt?: string; 
-    modelName?: 'gpt_3_5_turbo' | 'gpt_3_5_turbo_16k' | 'gpt_4' | 'gpt_4_32k' | 'gpt_4o_mini'; 
+    modelName?: 'gpt_3_5_turbo' | 'gpt_3_5_turbo_16k' | 'gpt_4' | 'gpt_4_32k' | 'gpt_4o'; 
     temperature?: number; 
     visibility?: 'public' | 'private' 
   }): Promise<Agent> {

@@ -24,7 +24,7 @@ export default function EditAgentPage() {
     description: '',
     systemPrompt: '',
     userPrompt: '{query}', // Valor fijo
-    modelName: 'gpt_4o_mini' as 'gpt_4o_mini', // Valor fijo
+    modelName: 'gpt_4o' as 'gpt_4o', // Valor fijo
     temperature: 0, // Valor fijo
     visibility: 'public' as 'public' | 'private'
   })
@@ -47,7 +47,7 @@ export default function EditAgentPage() {
         description: agentData.description || '',
         systemPrompt: agentData.systemPrompt || '',
         userPrompt: agentData.userPrompt || '{query}',
-        modelName: (agentData.modelName as 'gpt_4o_mini') || 'gpt_4o_mini',
+        modelName: (agentData.modelName as 'gpt_4o') || 'gpt_4o',
         temperature: agentData.temperature || 0,
         visibility: (agentData.visibility as 'public' | 'private') || 'public'
       })

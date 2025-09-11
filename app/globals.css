@@ -22,3 +22,38 @@
     @apply bg-white text-gray-900;
   }
 }
+
+/* Chat message layout - sane wrapping */
+@layer utilities {
+  .chat-message-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Message bubble width and wrapping */
+  .chat-message-bubble {
+    max-width: 32rem !important; /* ~512px on large screens */
+    width: fit-content !important;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important; /* allow wrapping long tokens */
+    hyphens: auto !important;
+  }
+
+  /* Preserve formatting for code while allowing wrap */
+  .chat-message-bubble pre,
+  .chat-message-bubble code {
+    white-space: pre-wrap !important;
+    overflow-x: auto !important;
+    word-break: normal !important;
+  }
+
+  /* Regular text elements should wrap by words */
+  .chat-message-bubble p,
+  .chat-message-bubble li,
+  .chat-message-bubble span,
+  .chat-message-bubble div {
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+}

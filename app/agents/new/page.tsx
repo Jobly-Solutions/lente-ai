@@ -20,7 +20,7 @@ export default function NewAgentPage() {
     description: '',
     systemPrompt: '',
     userPrompt: '{query}', // Valor fijo
-    modelName: 'gpt_4o_mini' as 'gpt_4o_mini', // Valor fijo
+    modelName: 'gpt_4o' as 'gpt_4o', // Valor fijo
     temperature: 0, // Valor fijo
     visibility: 'public' as 'public' | 'private'
   })
