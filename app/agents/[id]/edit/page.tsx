@@ -9,7 +9,7 @@ import { Bot, ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { braviloApiClient, Agent } from '@/lib/bravilo-api'
+import { braviloApiClient, Agent, Datastore } from '@/lib/bravilo-api'
 
 export default function EditAgentPage() {
   const params = useParams()
@@ -19,6 +19,8 @@ export default function EditAgentPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [agent, setAgent] = useState<Agent | null>(null)
+  const [datastores, setDatastores] = useState<Datastore[]>([])
+  const [selectedDatastoreIds, setSelectedDatastoreIds] = useState<string[]>([])
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -32,6 +34,7 @@ export default function EditAgentPage() {
   useEffect(() => {
     if (agentId) {
       loadAgent()
+      loadDatastores()
     }
   }, [agentId])
 
@@ -51,11 +54,28 @@ export default function EditAgentPage() {
         temperature: agentData.temperature || 0,
         visibility: (agentData.visibility as 'public' | 'private') || 'public'
       })
+
+      // Load assigned datastores from agent tools
+      if (agentData.tools && Array.isArray(agentData.tools)) {
+        const datastoreIds = agentData.tools
+          .filter((tool: any) => tool.type === 'datastore' && tool.datastoreId)
+          .map((tool: any) => tool.datastoreId)
+        setSelectedDatastoreIds(datastoreIds)
+      }
     } catch (error) {
       console.error('Error loading agent:', error)
       alert('Error al cargar el agente. Por favor, intenta de nuevo.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadDatastores() {
+    try {
+      const datastoresData = await braviloApiClient.getDatastores()
+      setDatastores(datastoresData)
+    } catch (error) {
+      console.error('Error loading datastores:', error)
     }
   }
 
@@ -73,6 +93,23 @@ export default function EditAgentPage() {
         temperature: formData.temperature,
         visibility: formData.visibility
       })
+
+      // Update datastore assignments
+      if (selectedDatastoreIds.length > 0) {
+        const tools = selectedDatastoreIds.map((id) => ({ type: 'datastore', datastoreId: id }))
+        await fetch(`/api/agents/${agentId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tools }),
+        })
+      } else {
+        // Remove all datastore assignments
+        await fetch(`/api/agents/${agentId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tools: [] }),
+        })
+      }
       
       router.push('/agents')
     } catch (error) {
@@ -237,10 +274,48 @@ export default function EditAgentPage() {
                   </p>
                 </div>
 
+                {/* Datastore selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Asignar Datastores (opcional)</label>
+                  {datastores.length === 0 ? (
+                    <p className="text-sm text-gray-500">No hay datastores disponibles. Crea uno primero.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {datastores.map((ds) => {
+                        const checked = selectedDatastoreIds.includes(ds.id)
+                        return (
+                          <label key={ds.id} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked
+                                setSelectedDatastoreIds((prev) => (
+                                  isChecked ? [...prev, ds.id] : prev.filter((id) => id !== ds.id)
+                                ))
+                              }}
+                              className="rounded border-gray-300 text-lente-600 focus:ring-lente-500"
+                            />
+                            <div className="flex-1">
+                              <span className="text-sm font-medium">{ds.name}</span>
+                              {ds.description && (
+                                <p className="text-xs text-gray-500">{ds.description}</p>
+                              )}
+                            </div>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-500 mt-2">
+                    Los datastores asignados proporcionarán información específica al agente para responder consultas.
+                  </p>
+                </div>
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-blue-900 mb-2">Configuración Fija</h3>
                   <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• <strong>Modelo:</strong> GPT-4o Mini (optimizado y eficiente)</li>
+                    <li>• <strong>Modelo:</strong> GPT-4o (optimizado y eficiente)</li>
                     <li>• <strong>Temperatura:</strong> 0 (máxima precisión y consistencia)</li>
                     <li>• <strong>Prompt de Usuario:</strong> {`{query}`} (se reemplaza automáticamente)</li>
                   </ul>
