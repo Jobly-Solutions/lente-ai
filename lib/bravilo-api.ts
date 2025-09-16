@@ -104,6 +104,12 @@ export interface Agent {
   userPrompt?: string;
   modelName?: 'gpt_3_5_turbo' | 'gpt_3_5_turbo_16k' | 'gpt_4' | 'gpt_4_32k' | 'gpt_4o';
   temperature?: number;
+  // Tools configuration
+  tools?: Array<{
+    type: string;
+    datastoreId?: string;
+    [key: string]: any;
+  }>;
 }
 
 export interface Datastore {
